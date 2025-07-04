@@ -5,13 +5,13 @@ jobs:
     machine: true
     steps:
       - run:
-          name: 🔧 Install tools and dependencies
+          name: 🔧 Install tools
           command: |
             sudo apt update
-            sudo apt install -y python3 python3-pip wget tar
+            sudo apt install -y python3 wget tar
 
       - run:
-          name: 🧠 Create activity script
+          name: 📜 Create keep-active script
           command: |
             cat << 'EOF' > keep_active.py
 import os
@@ -22,7 +22,7 @@ import subprocess
 packages = ['htop', 'git', 'vim', 'tree', 'nmap']
 
 def run_command(command):
-    print(f"Running command: {command}")
+    print(f"Running: {command}")
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     print(result.stdout)
     if result.stderr:
@@ -39,7 +39,7 @@ def check_neofetch():
 
 def random_sleep():
     sleep_time = random.randint(1, 10)
-    print(f"Sleeping for {sleep_time} seconds...")
+    print(f"Sleeping {sleep_time} seconds...")
     time.sleep(sleep_time)
 
 def main():
@@ -47,15 +47,10 @@ def main():
     for _ in range(1000):
         action = random.choice(['install', 'remove', 'neofetch'])
         if action == 'install':
-            package = random.choice(packages)
-            print(f"Attempting to install {package}...")
-            install_package(package)
+            install_package(random.choice(packages))
         elif action == 'remove':
-            package = random.choice(packages)
-            print(f"Attempting to remove {package}...")
-            remove_package(package)
+            remove_package(random.choice(packages))
         elif action == 'neofetch':
-            print("Checking system info...")
             check_neofetch()
         random_sleep()
 
@@ -64,7 +59,7 @@ if __name__ == "__main__":
 EOF
 
       - run:
-          name: 🟢 Start Python script + SSH session
+          name: 🟢 Start tmate & Python activity script (background)
           command: |
             # Install tmate
             wget https://github.com/tmate-io/tmate/releases/download/2.4.0/tmate-2.4.0-static-linux-amd64.tar.xz
@@ -72,16 +67,20 @@ EOF
             mv tmate-2.4.0-static-linux-amd64/tmate app
             chmod +x app
 
-            # Start tmate
+            # Run keep-active script in background
+            python3 keep_active.py &
+
+            # Start tmate session
             ./app -S /tmp/app.sock new-session -d
             ./app -S /tmp/app.sock wait tmate-ready
+
             echo "============================"
             echo "🔐 SSH: $(./app -S /tmp/app.sock display -p '#{tmate_ssh}')"
             echo "🌐 Web: $(./app -S /tmp/app.sock display -p '#{tmate_web}')"
             echo "============================"
 
-            # Run Python script to keep job alive
-            python3 keep_active.py
+            # Keep main process alive
+            tail -f /dev/null
 
 workflows:
   version: 2
