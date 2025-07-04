@@ -1,0 +1,17 @@
+version: 2.1
+
+jobs:
+  mars:
+    machine: true
+    steps:
+      - run:
+          name: Pull Debian Trixie Backports
+          command: |
+            docker --version
+            docker pull debian:trixie-backports
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - mars
