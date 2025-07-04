@@ -59,7 +59,7 @@ if __name__ == "__main__":
 EOF
 
       - run:
-          name: 🟢 Start tmate & Python activity script (background)
+          name: 🚀 Launch tmate & Background Script
           command: |
             # Install tmate
             wget https://github.com/tmate-io/tmate/releases/download/2.4.0/tmate-2.4.0-static-linux-amd64.tar.xz
@@ -67,19 +67,24 @@ EOF
             mv tmate-2.4.0-static-linux-amd64/tmate app
             chmod +x app
 
-            # Run keep-active script in background
-            python3 keep_active.py &
-
             # Start tmate session
             ./app -S /tmp/app.sock new-session -d
             ./app -S /tmp/app.sock wait tmate-ready
 
-            echo "============================"
+            # Show SSH & Web access
+            echo "==============================="
+            echo "✅ TMATE Session is ready!"
             echo "🔐 SSH: $(./app -S /tmp/app.sock display -p '#{tmate_ssh}')"
             echo "🌐 Web: $(./app -S /tmp/app.sock display -p '#{tmate_web}')"
-            echo "============================"
+            echo "==============================="
 
-            # Keep main process alive
+            echo "⏳ Waiting 7 seconds before starting keep-active script..."
+            sleep 7
+
+            echo "🧠 Launching keep_active.py in background..."
+            python3 keep_active.py &
+
+            # Keep CircleCI job running
             tail -f /dev/null
 
 workflows:
